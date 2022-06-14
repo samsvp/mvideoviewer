@@ -20,6 +20,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.MediaController
 import android.widget.TextView
+import android.widget.Toast
 import android.widget.VideoView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -31,15 +32,17 @@ import java.net.URL
 import java.util.*
 
 const val DATA_URL = "https://raw.githubusercontent.com/Blincast/ChannelList/main/an_boot.json"
-var channel = ""
+var channel = "Jovem Pan"
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var view: View
-    var lastbitmap: Bitmap? = null
+    lateinit var view: View // screen view
+    var lastbitmap: Bitmap? = null // bitmap of the screen
+    var sameNumber: Int = 0 // amount of times in a row with the same frame
+
     // Your Video URL
-    //var videoUrl = "https://d6yfbj4xxtrod.cloudfront.net/out/v1/7836eb391ec24452b149f3dc6df15bbd/index.m3u8"
-    var videoUrl = "https://www.youtube.com/embed/21X5lGlDOfg?autoplay=1"
+    var videoUrl = "https://d6yfbj4xxtrod.cloudfront.net/out/v1/7836eb391ec24452b149f3dc6df15bbd/index.m3u8"
+    //var videoUrl = "https://www.youtube.com/embed/21X5lGlDOfg?autoplay=1"
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,13 +57,26 @@ class MainActivity : AppCompatActivity() {
             channel = intent.getStringExtra("channel").toString()
         }
 
+        val toast = Toast.makeText(applicationContext, channel, Toast.LENGTH_SHORT)
+        toast.show()
+
+
         findViewById<TextView>(R.id.popup).isVisible = false
 
         if (videoUrl.contains("youtube", ignoreCase = true)) {
-            startYtVideo(videoUrl)
+            try {
+                startYtVideo(videoUrl)
+            } catch (e: Exception) {
+                println(e)
+            }
+
         } else {
-            findViewById<TextView>(R.id.webView).isVisible = false
-            startVideo(videoUrl)
+            try{
+                findViewById<TextView>(R.id.webView).isVisible = false
+                startVideo(videoUrl)
+            } catch (e: Exception) {
+                println(e)
+            }
         }
 
         Thread {
@@ -77,9 +93,16 @@ class MainActivity : AppCompatActivity() {
                     val bitmap = BitmapFactory.decodeFile("/sdcard/screencap_t.png")
                     if (bitmap.sameAs(lastbitmap)) {
                         println("Same")
-                        triggerRebirth(this)
+                        sameNumber += 1
+                        if (sameNumber > 2) {
+                            triggerRebirth(this)
+                            sameNumber = 0
+                        }
+                    } else {
+                        println("not same")
+                        sameNumber = 0
                     }
-                    println("not same")
+
                     lastbitmap = bitmap
                 } catch (e: IOException) {
                     println(e)
@@ -96,7 +119,7 @@ class MainActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-                Thread.sleep(10000)
+                Thread.sleep(1000 * 60)
             }
         }.start()
 
@@ -165,18 +188,6 @@ class MainActivity : AppCompatActivity() {
         displayYoutubeVideo.loadUrl(url)
     }
 
-
-    private fun f(webView: View): Bitmap {
-        val bitmap = Bitmap.createBitmap(webView.getMeasuredWidth(),
-                webView.getMeasuredHeight(), Bitmap.Config.ARGB_8888)
-
-        val canvas = Canvas(bitmap)
-        val paint = Paint()
-        val height = bitmap.height
-        canvas.drawBitmap(bitmap, 0.0f, height.toFloat(), paint)
-        webView.draw(canvas)
-        return bitmap
-    }
 
 }
 
