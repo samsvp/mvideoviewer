@@ -130,9 +130,7 @@ class MainActivity : AppCompatActivity() {
         val intent = packageManager.getLaunchIntentForPackage(context.packageName)
         intent!!.putExtra("url", videoUrl)
         intent!!.putExtra("channel", channel)
-        val componentName = intent!!.component
-        val mainIntent = Intent.makeRestartActivityTask(componentName)
-        context.startActivity(mainIntent)
+        context.startActivity(intent)
         Runtime.getRuntime().exit(0)
     }
 
